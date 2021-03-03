@@ -46,109 +46,109 @@ def validate_token(username: str, token: bytes):
         return False
     return True
 
+class ParseCommand(object):
+
+    def parse(self, command_name: str, command: str):
+        if not hasattr(self, command_name):
+            return False
+        parse_func = getattr(self, command_name)
+        return parse_func(command)
+
+    def register(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+            username: str = command_ls[1]
+            password: str = command_ls[2]
+        except:
+            return False
+        if command != 'register':
+            return False
+
+        return username, password
+
+    def login(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+            username: str = command_ls[1]
+            password: str = command_ls[2]
+        except:
+            return False
+        if command != 'login':
+            return False
+
+        return username, password
+
+    def cd(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+            dirname: str = command_ls[1]
+        except:
+            return False
+        if command != 'cd':
+            return False
+
+        return dirname
+
+    def mkdir(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+            dirname: str = command_ls[1]
+        except:
+            return False
+
+        if command != 'mkdir':
+            return False
+        return dirname
+
+    def dir(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+        except:
+            return False
+        if command != 'dir':
+            return False
+
+        return True
+
+    def pwd(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+        except:
+            return False
+        if command != 'pwd':
+            return False
+
+        return True
+
+    def get(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+            filename: str = command_ls[1]
+        except:
+            return False
+        if command != 'get':
+            return False
+
+        return filename
+
+    def put(self, command: str):
+        try:
+            command_ls: list = command.split()
+            command: str = command_ls[0]
+            filename: str = command_ls[1]
+        except:
+            return False
+        if command != 'put':
+            return False
+
+        return filename
+
 def parse_command(command_name: str, command: str):
-    if command_name == 'register':
-        return parse_register_command(command)
-    elif command_name == 'login':
-        return parse_login_command(command)
-    elif command_name == 'cd':
-        return parse_cd_command(command)
-    elif command_name == 'mkdir':
-        return parse_mkdir_command(command)
-    elif command_name == 'dir':
-        return parse_dir_command(command)
-    elif command_name == 'pwd':
-        return parse_pwd_command(command)
-    elif command_name == 'get':
-        return parse_get_command(command)
-
-def parse_register_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-        username: str = command_ls[1]
-        password: str = command_ls[2]
-    except:
-        return False
-
-    if command != 'register':
-        return False
-
-    return username, password
-
-def parse_login_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-        username: str = command_ls[1]
-        password: str = command_ls[2]
-    except:
-        return False
-
-    if command != 'login':
-        return False
-
-    return username, password
-
-def parse_cd_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-        dirname: str = command_ls[1]
-    except:
-        return False
-
-    if command != 'cd':
-        return False
-
-    return dirname
-
-def parse_mkdir_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-        dirname: str = command_ls[1]
-    except:
-        return False
-
-    if command != 'mkdir':
-        return False
-
-    return dirname
-
-def parse_dir_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-    except:
-        return False
-
-    if command != 'dir':
-        return False
-
-    return True
-
-def parse_pwd_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-    except:
-        return False
-
-    if command != 'pwd':
-        return False
-
-    return True
-
-def parse_get_command(command: str):
-    try:
-        command_ls: list = command.split()
-        command: str = command_ls[0]
-        filename: str = command_ls[1]
-    except:
-        return False
-
-    if command != 'get':
-        return False
-
-    return filename
+    return ParseCommand().parse(command_name=command_name, command=command)
