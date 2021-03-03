@@ -8,10 +8,10 @@
 @Desc:      None
 """
 # here put the import lib
-import hashlib
 import json
+import hashlib
 
-from server.settings import STATUS_CODE, SECRET_KEY
+from settings import STATUS_CODE, SECRET_KEY
 from typing import Optional
 from itsdangerous import BadSignature, SignatureExpired
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -46,7 +46,6 @@ def validate_token(username: str, token: bytes):
         return False
     return True
 
-
 def parse_command(command_name: str, command: str):
     if command_name == 'register':
         return parse_register_command(command)
@@ -60,6 +59,8 @@ def parse_command(command_name: str, command: str):
         return parse_dir_command(command)
     elif command_name == 'pwd':
         return parse_pwd_command(command)
+    elif command_name == 'get':
+        return parse_get_command(command)
 
 def parse_register_command(command: str):
     try:
@@ -138,3 +139,16 @@ def parse_pwd_command(command: str):
         return False
 
     return True
+
+def parse_get_command(command: str):
+    try:
+        command_ls: list = command.split()
+        command: str = command_ls[0]
+        filename: str = command_ls[1]
+    except:
+        return False
+
+    if command != 'get':
+        return False
+
+    return filename
