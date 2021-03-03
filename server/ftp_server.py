@@ -136,7 +136,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         self.request.send(generate_json('200').encode())
 
     def dir(self, command: str):
-        """view current dir."""
+        """view current dir message"""
         if not parse_command(command_name='dir', command=command):
             self.request.send(generate_json('400').encode())
             return
@@ -147,15 +147,34 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         dir_message = os.popen(f'dir {self.user_dir}').read()
         return self.request.send(generate_json('200', dir_message=dir_message).encode())
 
+    def pwd(self, command: str):
+        """view current work dir."""
+        if not parse_command(command_name='pwd', command=command):
+            self.request.send(generate_json('400').encode())
+            return
+
+        if not self._validate_token():
+            return
+
+        self.request.send(generate_json('200', pwd_dir=self.user_dir).encode())
+
 
     def _validate_token(self):
         self.request.send(generate_json('000').encode())  # avoid sticking the packet.
         token = self.request.recv(1024)
+
+        if not hasattr(self, 'username'):
+            self.request.send(generate_json('401').encode())
+            return False
+
         if not validate_token(self.username, token):
             self._reset_user()
             self.request.send(generate_json('401').encode())
             return False
         return True
+
+    def _set_user(self):
+        pass
 
     def _reset_user(self):
         self.home_dir = None

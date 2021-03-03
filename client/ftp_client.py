@@ -15,7 +15,7 @@ from socket import socket
 class FtpClient(object):
     def __init__(self, client: socket):
         self.client: socket = client
-        self.token: bytes = b''   # current token
+        self.token: bytes = b'no token'   # current token
 
     def run(self):
         while True:
@@ -73,7 +73,7 @@ class FtpClient(object):
         print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
 
     def dir(self, command: str):
-        """view current dir."""
+        """view current dir message."""
         self.client.send(command.encode())
         recv_data: dict = json.loads(self.client.recv(1024).decode())
         if recv_data['code'] != '000':
@@ -84,5 +84,20 @@ class FtpClient(object):
         recv_data: dict = json.loads(self.client.recv(1024).decode())
         if recv_data['code'] == '200':
             print(f'code: {recv_data["code"]}, message: {recv_data["message"]}, dir_message:\n{recv_data["dir_message"]}')
+        else:
+            print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
+
+    def pwd(self, command: str):
+        """view current work dir."""
+        self.client.send(command.encode())
+        recv_data: dict = json.loads(self.client.recv(1024).decode())
+        if recv_data['code'] != '000':
+            print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
+            return
+
+        self.client.send(self.token)
+        recv_data: dict = json.loads(self.client.recv(1024).decode())
+        if recv_data['code'] == '200':
+            print(f'code: {recv_data["code"]}, message: {recv_data["message"]}, pwd_dir:\n{recv_data["pwd_dir"]}')
         else:
             print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
