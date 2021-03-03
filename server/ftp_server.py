@@ -10,12 +10,12 @@
 # here put the import lib
 import os
 import json
+import hashlib
 import socketserver
 
 from typing import Optional
-
-from server.helpers import hash, generate_json, generate_token, validate_token, parse_command
-from server.settings import USER_DB, BASE_DIR
+from helpers import hash, generate_json, generate_token, validate_token, parse_command
+from settings import USER_DB, BASE_DIR
 
 class MyTcpHandler(socketserver.BaseRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -158,6 +158,38 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
 
         self.request.send(generate_json('200', pwd_dir=self.user_dir).encode())
 
+    def get(self, command: str):
+        """download file."""
+        command_parse = parse_command(command_name='get', command=command)
+        if not command_parse:
+            self.request.send(generate_json('400').encode())
+            return
+        filename = command_parse
+
+        if not self._validate_token():
+            return
+
+        file = f'{self.user_dir}\{filename}'
+        if not os.path.isfile(file):
+            self.request.send(generate_json('404').encode())
+            return
+
+        total_filesize = os.stat(file).st_size
+        self.request.send(generate_json('000', total_filesize=total_filesize).encode())
+        recv_data = self.request.recv(1024).decode()
+        if recv_data == '405':
+            return
+        received_filesize = int(recv_data)
+
+        m = hashlib.md5()
+        f = open(file, 'rb')
+        f.seek(received_filesize)
+
+        for line in f:
+            m.update(line)
+            self.request.send(line)
+
+        self.request.send(m.hexdigest().encode())
 
     def _validate_token(self):
         self.request.send(generate_json('000').encode())  # avoid sticking the packet.
@@ -172,9 +204,6 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             self.request.send(generate_json('401').encode())
             return False
         return True
-
-    def _set_user(self):
-        pass
 
     def _reset_user(self):
         self.home_dir = None
