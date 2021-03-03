@@ -32,11 +32,14 @@ def generate_token(username: str, expire_in: Optional[str] = None):
     data = {'username': username}
     return s.dumps(data)
 
-def validate_token(username: str, token):
+def validate_token(username: str, token: bytes):
     s = Serializer(secret_key=SECRET_KEY)
     try:
         data = s.loads(token)
     except (SignatureExpired, BadSignature):
+        return False
+
+    if not data.get('username'):
         return False
 
     if username != data.get('username'):
@@ -55,6 +58,8 @@ def parse_command(command_name: str, command: str):
         return parse_mkdir_command(command)
     elif command_name == 'dir':
         return parse_dir_command(command)
+    elif command_name == 'pwd':
+        return parse_pwd_command(command)
 
 def parse_register_command(command: str):
     try:
@@ -118,6 +123,18 @@ def parse_dir_command(command: str):
         return False
 
     if command != 'dir':
+        return False
+
+    return True
+
+def parse_pwd_command(command: str):
+    try:
+        command_ls: list = command.split()
+        command: str = command_ls[0]
+    except:
+        return False
+
+    if command != 'pwd':
         return False
 
     return True
