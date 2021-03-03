@@ -9,8 +9,8 @@
 """
 # here put the import lib
 import socket
-from client.settings import IP_PORT
-from client.ftp_client import FtpClient
+from settings import IP_PORT
+from ftp_client import FtpClient
 
 client = socket.socket()
 client.connect(IP_PORT)

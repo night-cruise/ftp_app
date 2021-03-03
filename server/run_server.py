@@ -9,8 +9,8 @@
 """
 # here put the import lib
 import socketserver
-from server.settings import IP_PORT
-from server.ftp_server import MyTcpHandler
+from settings import IP_PORT
+from ftp_server import MyTcpHandler
 
 if __name__ == '__main__':
     server = socketserver.ThreadingTCPServer(IP_PORT, MyTcpHandler)
