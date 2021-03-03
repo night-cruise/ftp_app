@@ -18,7 +18,8 @@ STATUS_CODE = {
     '401': 'Auth error, please login again.',
     '402': 'User\dir\file has existed',
     '403': 'No permission.',
-    '404': 'Not found.'
+    '404': 'Not found.',
+    '405': 'File has been completed.'
 }
 
 DIST_QUOTA = 1024*1024*100
