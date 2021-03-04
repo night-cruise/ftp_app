@@ -153,6 +153,61 @@ class FtpClient(object):
         else:
             print('\nMd5 is inconsistent.')
 
+    def put(self, command: str):
+        """upload file."""
+        try:
+            filename = command.split()[1]
+        except:
+            print('Command error.')
+            return
+        if not os.path.isfile(filename):
+            print('File not existed.')
+            return
+
+        self.client.send(command.encode())
+        recv_data: dict = json.loads(self.client.recv(1024).decode())
+        if recv_data['code'] != '000':
+            print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
+            return
+
+        self.client.send(self.token)
+        recv_data: dict = json.loads(self.client.recv(1024).decode())
+        if recv_data['code'] != '000':
+            print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
+            return
+
+        received_filesize = recv_data['received_filesize']
+        total_filesize = os.stat(filename).st_size
+        if received_filesize >= total_filesize:
+            print('File already upload completed.')
+            self.client.send('405'.encode())
+            return
+        self.client.send(str(total_filesize).encode())
+
+        recv_data = json.loads(self.client.recv(1024).decode())
+        if recv_data['code'] != '000':
+            print(f'code: {recv_data["code"]}, message: {recv_data["message"]}')
+            return
+        self.client.send('000'.encode())
+
+        f = open(filename, 'rb')
+        f.seek(received_filesize)
+        m = hashlib.md5()
+
+        for line in f:
+            m.update(line)
+            self.client.send(line)
+            self.progress_bar(received_filesize=received_filesize, total_filesize=total_filesize, mode='Uploading')
+            received_filesize += len(line)
+
+        recv_md5 = self.client.recv(1024).decode()
+        md5 = m.hexdigest()
+        if md5 == recv_md5:
+            print('\nFile upload completed.')
+        else:
+            print('\nMd5 is inconsistent.')
+
+
     @staticmethod
     def progress_bar(received_filesize: int, total_filesize: int, mode: str):
         width = 50

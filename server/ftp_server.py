@@ -15,7 +15,7 @@ import socketserver
 
 from typing import Optional
 from helpers import hash, generate_json, generate_token, validate_token, parse_command
-from settings import USER_DB, BASE_DIR
+from settings import USER_DB, BASE_DIR, DISK_QUOTA
 
 class MyTcpHandler(socketserver.BaseRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -23,12 +23,13 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         self.username: Optional[str] = None     # current username
         self.home_dir: Optional[str] = None     # current user dir
         self.user_dir: Optional[str] = None     # current user home dir
+        self.disk_quota: int = 0                # current user disk quota
 
     def handle(self) -> None:
         while True:
             try:
                 command: str = self.request.recv(1024).decode()
-                command_prefix: str = command.split()[0]
+                command_prefix: str = command.split()[0] if command else None
 
                 if hasattr(self, command_prefix):
                     func = getattr(self, command_prefix)
@@ -58,7 +59,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             return
 
         hashed_password = hash(password)
-        user_db[username] = {'username': username, 'password': hashed_password}
+        user_db[username] = {'username': username, 'password': hashed_password, 'disk_quota': 0}
         with open(USER_DB, 'w', encoding='utf-8') as f:
             json.dump(user_db, f)
 
@@ -81,9 +82,10 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             self.request.send(generate_json('401').encode())
             return
 
-        self.username = username                    # set current user username
-        self.home_dir = f'{BASE_DIR}\{username}'    # set current user homedir
-        self.user_dir = self.home_dir               # set current user userdir
+        self.username = username                             # set current user username
+        self.home_dir = f'{BASE_DIR}\{username}'             # set current user homedir
+        self.user_dir = self.home_dir                        # set current user userdir
+        self.disk_quota = user_db[username]['disk_quota']    # set current user disk quota
 
         token = generate_token(username=username)
         self.request.send(generate_json('200').encode())
@@ -190,6 +192,54 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             self.request.send(line)
 
         self.request.send(m.hexdigest().encode())
+
+    def put(self, command: str):
+        """upload file."""
+        command_parse = parse_command(command_name='put', command=command)
+        if not command_parse:
+            self.request.send(generate_json('400').encode())
+            return
+        filename = command_parse
+
+        if not self._validate_token():
+            return
+
+        file = f'{self.user_dir}\{filename}'
+        received_filesize = 0
+        if os.path.isfile(file):
+            received_filesize = os.stat(file).st_size
+        self.request.send(generate_json('000', received_filesize=received_filesize).encode())
+
+        recv_data = self.request.recv(1024).decode()
+        if recv_data == '405':
+            return
+        total_filesize = int(recv_data)
+
+        need_disk = total_filesize - received_filesize
+        if (self.disk_quota + need_disk) > DISK_QUOTA:
+            self.request.send(generate_json('407').encode())
+            return
+        else:
+            self.request.send(generate_json('000').encode())
+
+        self.request.recv(1024)     # avoid sticking the packet.
+
+        m = hashlib.md5()
+        f = open(file, 'wb')
+        f.seek(received_filesize)
+
+        while received_filesize < total_filesize:
+            last_size = total_filesize - received_filesize
+            recv_size = 1024
+            if last_size < 1024:
+                recv_size = last_size   # avoid sticking the packet.
+            data = self.request.recv(recv_size)
+            m.update(data)
+            f.write(data)
+            received_filesize += len(data)
+
+        self.request.send(m.hexdigest().encode())
+
 
     def _validate_token(self):
         self.request.send(generate_json('000').encode())  # avoid sticking the packet.
