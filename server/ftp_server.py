@@ -16,7 +16,7 @@ import socketserver
 from typing import Optional
 from helpers import hash, generate_json, generate_token, validate_token
 from parse import parse_command
-from settings import USER_DB, BASE_DIR, DISK_QUOTA
+from settings import USER_DB, BASE_DIR, DISK_QUOTA, PATH_SEP
 
 class MyTcpHandler(socketserver.BaseRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -64,7 +64,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         with open(USER_DB, 'w', encoding='utf-8') as f:
             json.dump(user_db, f)
 
-        os.mkdir(f'{BASE_DIR}\{username}')
+        os.mkdir(f'{BASE_DIR}{PATH_SEP}{username}')
         self.request.send(generate_json('201').encode())
 
     def login(self, command: str):
@@ -84,7 +84,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             return
 
         self.username = username                             # set current user username
-        self.home_dir = f'{BASE_DIR}\{username}'             # set current user homedir
+        self.home_dir = f'{BASE_DIR}{PATH_SEP}{username}'             # set current user homedir
         self.user_dir = self.home_dir                        # set current user userdir
         self.disk_quota = user_db[username]['disk_quota']    # set current user disk quota
 
@@ -112,7 +112,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             else:
                 self.request.send(generate_json('403').encode())
             return
-        cd_dir = f'{self.user_dir}\{dirname}'
+        cd_dir = f'{self.user_dir}{PATH_SEP}{dirname}'
         if os.path.isdir(cd_dir):
             self.user_dir = cd_dir
             self.request.send(generate_json('200').encode())
@@ -130,7 +130,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         if not self._validate_token():
             return
 
-        mk_dir = f'{self.user_dir}\{dirname}'
+        mk_dir = f'{self.user_dir}{PATH_SEP}{dirname}'
         if os.path.isdir(mk_dir):
             self.request.send(generate_json('402').encode())
             return
@@ -172,7 +172,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         if not self._validate_token():
             return
 
-        file = f'{self.user_dir}\{filename}'
+        file = f'{self.user_dir}{PATH_SEP}{filename}'
         if not os.path.isfile(file):
             self.request.send(generate_json('404').encode())
             return
@@ -205,7 +205,7 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
         if not self._validate_token():
             return
 
-        file = f'{self.user_dir}\{filename}'
+        file = f'{self.user_dir}{PATH_SEP}{filename}'
         received_filesize = 0
         if os.path.isfile(file):
             received_filesize = os.stat(file).st_size

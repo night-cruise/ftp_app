@@ -8,7 +8,10 @@
 @Desc:      None
 """
 # here put the import lib
-import os
+import os, sys
+
+WIN = sys.platform.startswith('win')
+PATH_SEP = '\\' if WIN else '/'
 
 STATUS_CODE = {
     '000': 'no message.',
@@ -24,7 +27,7 @@ STATUS_CODE = {
 }
 
 DISK_QUOTA = 1024*1024*1000
-BASE_DIR = os.path.abspath(os.path.dirname(__file__)) + '\home'
+BASE_DIR = f'{os.path.abspath(os.path.dirname(__file__))}{PATH_SEP}home'
 TEST_USER_DB = 'test.db'
 USER_DB = 'user.db'         # dict structure
 IP_PORT = ('localhost', 8888)
