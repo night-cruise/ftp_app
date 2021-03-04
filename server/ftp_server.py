@@ -239,6 +239,13 @@ class MyTcpHandler(socketserver.BaseRequestHandler):
             f.write(data)
             received_filesize += len(data)
 
+        self.disk_quota += need_disk
+        with open(USER_DB, 'r', encoding='utf-8') as f:
+            user_db = json.load(f)
+        user_db[self.username]['disk_quota'] = self.disk_quota
+        with open(USER_DB, 'w', encoding='utf-8') as f:
+            json.dump(user_db, f)
+
         self.request.send(m.hexdigest().encode())
 
 
