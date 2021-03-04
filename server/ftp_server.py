@@ -14,7 +14,8 @@ import hashlib
 import socketserver
 
 from typing import Optional
-from helpers import hash, generate_json, generate_token, validate_token, parse_command
+from helpers import hash, generate_json, generate_token, validate_token
+from parse import parse_command
 from settings import USER_DB, BASE_DIR, DISK_QUOTA
 
 class MyTcpHandler(socketserver.BaseRequestHandler):
