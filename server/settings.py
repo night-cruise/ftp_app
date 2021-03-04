@@ -16,13 +16,14 @@ STATUS_CODE = {
     '201': 'Created success.',
     '400': 'Parameter error.',
     '401': 'Auth error, please login again.',
-    '402': 'User\dir\file has existed',
+    '402': 'User/dir/file has existed.',
     '403': 'No permission.',
     '404': 'Not found.',
-    '405': 'File has been completed.'
+    '405': 'File has been completed.',
+    '407': 'Insufficient disk quota.'
 }
 
-DIST_QUOTA = 1024*1024*100
+DISK_QUOTA = 1024*1024*1000
 BASE_DIR = os.path.abspath(os.path.dirname(__file__)) + '\home'
 TEST_USER_DB = 'test.db'
 USER_DB = 'user.db' # dict structure
